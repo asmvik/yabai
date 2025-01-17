@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 ### Changed
 - Validate scripting-addition socket message length to prevent possbility of stack corruption [#2751](https://github.com/asmvik/yabai/issues/2751)
+- Replace Python seticon script with AppleScript implementation [#2525](https://github.com/asmvik/yabai/issues/2525)
 
 ## [7.1.17] - 2026-02-21
 ### Changed
