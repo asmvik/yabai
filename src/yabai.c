@@ -202,7 +202,11 @@ static void parse_arguments(int argc, char **argv)
 
     if ((string_equals(argv[1], VERSION_OPT_LONG)) ||
         (string_equals(argv[1], VERSION_OPT_SHRT))) {
+#ifdef GIT_COMMIT_HASH
+        fprintf(stdout, "yabai-v%d.%d.%d-%s\n", MAJOR, MINOR, PATCH, GIT_COMMIT_HASH);
+#else
         fprintf(stdout, "yabai-v%d.%d.%d\n", MAJOR, MINOR, PATCH);
+#endif
         exit(EXIT_SUCCESS);
     }
 
