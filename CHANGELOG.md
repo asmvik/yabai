@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 ### Changed
 - Update scripting addition for macOS 26.1 Apple Silicon [#2693](https://github.com/asmvik/yabai/issues/2693)
+- Replace seticon script with AppleScript implementation instead of Python
 
 ## [7.1.16] - 2025-10-07
 ### Changed
