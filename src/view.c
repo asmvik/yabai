@@ -183,11 +183,80 @@ static void area_make_pair(enum window_node_split split, int gap, float ratio, s
     }
 }
 
+static inline bool window_node_is_leaf(struct window_node *node);
+
+static CGSize window_node_get_min_size(struct window_node *node)
+{
+    CGSize min_size = { 0, 0 };
+
+    if (window_node_is_leaf(node)) {
+        for (int i = 0; i < node->window_count; ++i) {
+            struct window *window = window_manager_find_window(&g_window_manager, node->window_list[i]);
+            if (window && window->has_size_constraints) {
+                min_size.width = max(min_size.width, window->min_size.width);
+                min_size.height = max(min_size.height, window->min_size.height);
+            }
+        }
+    } else {
+        CGSize left_min = window_node_get_min_size(node->left);
+        CGSize right_min = window_node_get_min_size(node->right);
+        min_size.width = max(left_min.width, right_min.width);
+        min_size.height = max(left_min.height, right_min.height);
+    }
+
+    return min_size;
+}
+
 static void area_make_pair_for_node(struct view *view, struct window_node *node)
 {
     enum window_node_split split = window_node_get_split(view, node);
     float ratio = window_node_get_ratio(node);
     int gap     = window_node_get_gap(view);
+
+    CGSize left_min = window_node_get_min_size(node->left);
+    CGSize right_min = window_node_get_min_size(node->right);
+
+    if (split == SPLIT_Y) {
+        float available = node->area.w - gap;
+        float left_needed = left_min.width;
+        float right_needed = right_min.width;
+
+        if (left_needed > 0 && left_needed > available * ratio) {
+            float new_ratio = left_needed / available;
+            if (new_ratio <= 0.9f) {
+                ratio = new_ratio;
+                debug("adjusted ratio to %.2f for left child min_width %.0f\n", ratio, left_needed);
+            }
+        }
+
+        if (right_needed > 0 && right_needed > available * (1 - ratio)) {
+            float new_ratio = 1.0f - (right_needed / available);
+            if (new_ratio >= 0.1f) {
+                ratio = new_ratio;
+                debug("adjusted ratio to %.2f for right child min_width %.0f\n", ratio, right_needed);
+            }
+        }
+    } else {
+        float available = node->area.h - gap;
+        float left_needed = left_min.height;
+        float right_needed = right_min.height;
+
+        if (left_needed > 0 && left_needed > available * ratio) {
+            float new_ratio = left_needed / available;
+            if (new_ratio <= 0.9f) {
+                ratio = new_ratio;
+                debug("adjusted ratio to %.2f for left child min_height %.0f\n", ratio, left_needed);
+            }
+        }
+
+        if (right_needed > 0 && right_needed > available * (1 - ratio)) {
+            float new_ratio = 1.0f - (right_needed / available);
+            if (new_ratio >= 0.1f) {
+                ratio = new_ratio;
+                debug("adjusted ratio to %.2f for right child min_height %.0f\n", ratio, right_needed);
+            }
+        }
+    }
 
     area_make_pair(split, gap, ratio, &node->area, &node->left->area, &node->right->area);
 

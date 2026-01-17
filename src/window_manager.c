@@ -352,6 +352,22 @@ void window_manager_resize_window_relative_internal(struct window *window, CGRec
 
     float fw = max(1, frame.size.width  + dx * x_mod);
     float fh = max(1, frame.size.height + dy * y_mod);
+
+    if (window->has_size_constraints) {
+        if (window->min_size.width > 0 && fw < window->min_size.width) {
+            fw = window->min_size.width;
+        }
+        if (window->min_size.height > 0 && fh < window->min_size.height) {
+            fh = window->min_size.height;
+        }
+        if (window->max_size.width > 0 && fw > window->max_size.width) {
+            fw = window->max_size.width;
+        }
+        if (window->max_size.height > 0 && fh > window->max_size.height) {
+            fh = window->max_size.height;
+        }
+    }
+
     float fx = (direction & HANDLE_LEFT) ? frame.origin.x + frame.size.width  - fw : frame.origin.x;
     float fy = (direction & HANDLE_TOP)  ? frame.origin.y + frame.size.height - fh : frame.origin.y;
 
@@ -726,6 +742,52 @@ void window_manager_animate_window(struct window_capture capture)
     }
 }
 
+static void window_manager_apply_constrained_position(struct window *window, float target_x, float target_y,
+                                                       float target_w, float target_h, CGRect actual_frame)
+{
+    float new_x = target_x;
+    float new_y = target_y;
+
+    if (actual_frame.size.width < target_w) {
+        new_x = target_x + (target_w - actual_frame.size.width) / 2.0f;
+    }
+    if (actual_frame.size.height < target_h) {
+        new_y = target_y + (target_h - actual_frame.size.height) / 2.0f;
+    }
+
+    if (actual_frame.size.width > target_w || actual_frame.size.height > target_h) {
+        uint32_t did = window_display_id(window->id);
+        CGRect display_bounds = display_bounds_constrained(did, false);
+
+        float node_center_x = target_x + target_w / 2.0f;
+        float node_center_y = target_y + target_h / 2.0f;
+        float display_center_x = display_bounds.origin.x + display_bounds.size.width / 2.0f;
+        float display_center_y = display_bounds.origin.y + display_bounds.size.height / 2.0f;
+
+        if (actual_frame.size.width > target_w) {
+            float overflow = actual_frame.size.width - target_w;
+            if (node_center_x < display_center_x) {
+                new_x = target_x;
+            } else {
+                new_x = target_x - overflow;
+            }
+        }
+
+        if (actual_frame.size.height > target_h) {
+            float overflow = actual_frame.size.height - target_h;
+            if (node_center_y < display_center_y) {
+                new_y = target_y;
+            } else {
+                new_y = target_y - overflow;
+            }
+        }
+    }
+
+    if (new_x != target_x || new_y != target_y) {
+        window_manager_move_window(window, new_x, new_y);
+    }
+}
+
 void window_manager_set_window_frame(struct window *window, float x, float y, float width, float height)
 {
     //
@@ -747,6 +809,45 @@ void window_manager_set_window_frame(struct window *window, float x, float y, fl
         // NOTE(asmvik): Due to macOS constraints (visible screen-area), we might need to resize the window *after* moving it.
         window_manager_resize_window(window, width, height);
     });
+
+    CGRect actual_frame = window_ax_frame(window);
+
+    if (AX_DIFF(actual_frame.size.width, width) || AX_DIFF(actual_frame.size.height, height)) {
+        bool first_detection = !window->has_size_constraints;
+        window->has_size_constraints = true;
+
+        if (actual_frame.size.width > width) {
+            window->min_size.width = fmax(window->min_size.width, actual_frame.size.width);
+        }
+        if (actual_frame.size.height > height) {
+            window->min_size.height = fmax(window->min_size.height, actual_frame.size.height);
+        }
+        if (actual_frame.size.width < width) {
+            window->max_size.width = (window->max_size.width == 0)
+                ? actual_frame.size.width
+                : fmin(window->max_size.width, actual_frame.size.width);
+        }
+        if (actual_frame.size.height < height) {
+            window->max_size.height = (window->max_size.height == 0)
+                ? actual_frame.size.height
+                : fmin(window->max_size.height, actual_frame.size.height);
+        }
+
+        debug("window %d has constraints: min=%.0fx%.0f max=%.0fx%.0f\n",
+              window->id,
+              window->min_size.width, window->min_size.height,
+              window->max_size.width, window->max_size.height);
+
+        window_manager_apply_constrained_position(window, x, y, width, height, actual_frame);
+
+        if (first_detection) {
+            struct view *view = space_manager_find_view(&g_space_manager, space_manager_active_space());
+            if (view) {
+                view_update(view);
+                view_flush(view);
+            }
+        }
+    }
 }
 
 void window_manager_set_purify_mode(struct window_manager *wm, enum purify_mode mode)

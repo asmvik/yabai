@@ -103,6 +103,9 @@ struct window
     float opacity;
     int layer;
     char *scratchpad;
+    CGSize min_size;
+    CGSize max_size;
+    bool has_size_constraints;
 };
 
 enum window_flag
