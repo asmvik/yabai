@@ -1535,10 +1535,10 @@ static EVENT_HANDLER(MENU_CLOSED)
     --is_menu_open;
 
     if (is_menu_open < 0) {
+        // Sometimes Chrome apps call MENU_CLOSED without a corresponding MENU_OPENED,
+        // so just reset the `is_menu_open` and don't reset the FFM mode.
         is_menu_open = 0;
-    }
-
-    if (is_menu_open == 0) {
+    } else if (is_menu_open == 0) {
         g_window_manager.ffm_mode = ffm_value;
     }
 }
