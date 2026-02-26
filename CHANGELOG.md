@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Validate scripting-addition socket message length to prevent possbility of stack corruption [#2751](https://github.com/asmvik/yabai/issues/2751)
 
 ## [7.1.17] - 2026-02-21
 ### Changed

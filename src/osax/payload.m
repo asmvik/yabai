@@ -37,7 +37,6 @@
 #include "../misc/hashtable.h"
 #undef HASHTABLE_IMPLEMENTATION
 
-#define SOCKET_PATH_FMT "/tmp/yabai-sa_%s.socket"
 #define page_align(addr) (vm_address_t)((uintptr_t)(addr) & (~(vm_page_size - 1)))
 #define unpack(v) memcpy(&v, message, sizeof(v)); message += sizeof(v)
 #define lerp(a, t, b) (((1.0-t)*a) + (t*b))
@@ -1025,12 +1024,16 @@ static inline bool read_message(int sockfd, char *message)
     int bytes_to_read = 0;
 
     if (read(sockfd, &bytes_to_read, sizeof(int16_t)) == sizeof(int16_t)) {
+        if (bytes_to_read >= SA_SOCKET_BUFF_LEN) return false;
+        if (bytes_to_read <= 0)                  return false;
+
         do {
             int cur_read = read(sockfd, message+bytes_read, bytes_to_read-bytes_read);
             if (cur_read <= 0) break;
 
             bytes_read += cur_read;
         } while (bytes_read < bytes_to_read);
+
         return bytes_read == bytes_to_read;
     }
 
@@ -1043,7 +1046,7 @@ static void *handle_connection(void *unused)
         int sockfd = accept(daemon_sockfd, NULL, 0);
         if (sockfd == -1) continue;
 
-        char message[0x1000];
+        char message[SA_SOCKET_BUFF_LEN];
         if (read_message(sockfd, message)) {
             handle_message(sockfd, message);
         }
@@ -1108,7 +1111,7 @@ void load_payload(void)
     }
 
     char socket_file[255];
-    snprintf(socket_file, sizeof(socket_file), SOCKET_PATH_FMT, user);
+    snprintf(socket_file, sizeof(socket_file), SA_SOCKET_PATH_FMT, user);
 
     if (start_daemon(socket_file)) {
         NSLog(@"[yabai-sa] now listening..");

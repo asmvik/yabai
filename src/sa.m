@@ -4,7 +4,6 @@ extern int csr_get_active_config(uint32_t *config);
 #define CSR_ALLOW_UNRESTRICTED_FS 0x02
 #define CSR_ALLOW_TASK_FOR_PID    0x04
 
-#define SA_SOCKET_PATH_FMT "/tmp/yabai-sa_%s.socket"
 extern char g_sa_socket_file[MAXLEN];
 
 static char osax_base_dir[MAXLEN];
@@ -242,7 +241,7 @@ static bool scripting_addition_request_handshake(char *version, uint32_t *attrib
     int sockfd;
     bool result = false;
     char rsp[BUFSIZ] = {0};
-    char bytes[0x1000] = { 0x01, 0x00, SA_OPCODE_HANDSHAKE };
+    char bytes[SA_SOCKET_BUFF_LEN] = { 0x01, 0x00, SA_OPCODE_HANDSHAKE };
 
     if (socket_open(&sockfd)) {
         if (socket_connect(sockfd, g_sa_socket_file)) {
@@ -271,7 +270,7 @@ out:
 static int scripting_addition_perform_validation(void)
 {
     uint32_t attrib = 0;
-    char version[0x1000] = {0};
+    char version[SA_SOCKET_BUFF_LEN] = {0};
     bool is_latest_version_installed = scripting_addition_check() == 0;
 
     if (!scripting_addition_request_handshake(version, &attrib)) {
@@ -416,7 +415,7 @@ out:
     return result;
 }
 
-#define sa_payload_init() char bytes[0x1000]; int16_t length = 1+sizeof(length)
+#define sa_payload_init() char bytes[SA_SOCKET_BUFF_LEN]; int16_t length = 1+sizeof(length)
 #define pack(v) memcpy(bytes+length, &v, sizeof(v)); length += sizeof(v)
 #define sa_payload_send(op) *(int16_t*)bytes = length-sizeof(length), bytes[sizeof(length)] = op, scripting_addition_send_bytes(bytes, length)
 
