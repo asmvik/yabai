@@ -1293,12 +1293,12 @@ void window_manager_focus_window_without_raise(ProcessSerialNumber *window_psn, 
 
         //
         // @hack
-        // Artificially delay the activation by 1ms. This is necessary
+        // Artificially delay the activation by 40ms. This is necessary
         // because some applications appear to be confused if both of
         // the events appear instantaneously.
         //
 
-        usleep(10000);
+        usleep(40000);
 
         g_event_bytes[0x8a] = 0x01;
         memcpy(g_event_bytes + 0x3c, &window_id, sizeof(uint32_t));
