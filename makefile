@@ -14,6 +14,12 @@ OSAX_PATH      = ./src/osax
 INFO_PLIST     = $(ASSET_PATH)/Info.plist
 BINS           = $(BUILD_PATH)/yabai
 
+# Embed the current git commit hash (short) if available
+GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "")
+ifneq ($(GIT_HASH),)
+CLI_FLAGS += -DGIT_COMMIT_HASH=\"$(GIT_HASH)\"
+endif
+
 .PHONY: all asan tsan install man icon archive publish sign clean-build clean
 
 all: clean-build $(BINS)
