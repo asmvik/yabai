@@ -2,12 +2,13 @@
 #define WORKSPACE_H
 
 #define SUPPORTED_MACOS_VERSION_LIST    \
-    SUPPORT_MACOS_VERSION(tahoe,    26) \
-    SUPPORT_MACOS_VERSION(sequoia,  15) \
-    SUPPORT_MACOS_VERSION(sonoma,   14) \
-    SUPPORT_MACOS_VERSION(ventura,  13) \
-    SUPPORT_MACOS_VERSION(monterey, 12) \
-    SUPPORT_MACOS_VERSION(bigsur,   11)
+    SUPPORT_MACOS_VERSION(goldengate, 27) \
+    SUPPORT_MACOS_VERSION(tahoe,      26) \
+    SUPPORT_MACOS_VERSION(sequoia,    15) \
+    SUPPORT_MACOS_VERSION(sonoma,     14) \
+    SUPPORT_MACOS_VERSION(ventura,    13) \
+    SUPPORT_MACOS_VERSION(monterey,   12) \
+    SUPPORT_MACOS_VERSION(bigsur,     11)
 
 #define SUPPORT_MACOS_VERSION(name, major_version) \
 static bool _workspace_is_macos_version_##name; \
