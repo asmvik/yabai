@@ -5,6 +5,7 @@ extern struct space_manager g_space_manager;
 extern struct window_manager g_window_manager;
 extern struct mouse_state g_mouse_state;
 extern enum mission_control_mode g_mission_control_mode;
+extern uint64_t g_mission_control_sid;
 extern int g_connection;
 extern void *g_workspace_context;
 extern int g_layer_below_window_level;
@@ -974,20 +975,32 @@ static EVENT_HANDLER(SLS_SPACE_CREATED)
         debug("%s: %lld, %d\n", __FUNCTION__, sid, type);
         space_manager_find_view(&g_space_manager, sid);
         event_signal_push(SIGNAL_SPACE_CREATED, context);
+    } else if (type == 3) {
+        if (workspace_is_macos_goldengate()) {
+            debug("%s: MISSION_CONTROL_ENTER %lld\n", __FUNCTION__, sid);
+            g_mission_control_sid = sid;
+            event_loop_post(&g_event_loop, MISSION_CONTROL_SHOW_ALL_WINDOWS, NULL, 0);
+        }
     }
 }
 
 static EVENT_HANDLER(SLS_SPACE_DESTROYED)
 {
     uint64_t sid = (uint64_t)(intptr_t) context;
-    struct view *view = table_find(&g_space_manager.view, &sid);
-    if (view) {
-        debug("%s: %lld\n", __FUNCTION__, sid);
-        space_manager_remove_label_for_space(&g_space_manager, sid);
-        table_remove(&g_space_manager.view, &sid);
-        view_destroy(view);
-        free(view);
-        event_signal_push(SIGNAL_SPACE_DESTROYED, context);
+    if (sid == g_mission_control_sid) {
+        debug("%s: MISSION_CONTROL_EXIT %lld\n", __FUNCTION__, sid);
+        g_mission_control_sid = 0;
+        event_loop_post(&g_event_loop, MISSION_CONTROL_EXIT, NULL, 0);
+    } else {
+        struct view *view = table_find(&g_space_manager.view, &sid);
+        if (view) {
+            debug("%s: %lld\n", __FUNCTION__, sid);
+            space_manager_remove_label_for_space(&g_space_manager, sid);
+            table_remove(&g_space_manager.view, &sid);
+            view_destroy(view);
+            free(view);
+            event_signal_push(SIGNAL_SPACE_DESTROYED, context);
+        }
     }
 }
 

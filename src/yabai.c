@@ -35,6 +35,7 @@ struct event_loop g_event_loop;
 void *g_workspace_context;
 
 enum mission_control_mode g_mission_control_mode;
+uint64_t g_mission_control_sid;
 double g_cv_host_clock_frequency;
 int g_layer_normal_window_level;
 int g_layer_below_window_level;
