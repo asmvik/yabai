@@ -1281,7 +1281,10 @@ static void window_manager_make_key_window(ProcessSerialNumber *window_psn, uint
     g_event_bytes[0x04] = 0xf8;
     g_event_bytes[0x3a] = 0x10;
     memcpy(g_event_bytes + 0x3c, &window_id, sizeof(uint32_t));
-    memset(g_event_bytes + 0x20, 0xff, 0x10);
+    memcpy(g_event_bytes + 0x14, "\x80\x84\x2e\xc1", 4);
+    memcpy(g_event_bytes + 0x1c, "\x80\x84\x2e\xc1", 4);
+    memcpy(g_event_bytes + 0x24, "\x80\x84\x2e\xc1", 4);
+    memcpy(g_event_bytes + 0x2c, "\x80\x84\x2e\xc1", 4);
 
     g_event_bytes[0x08] = 0x01;
     SLPSPostEventRecordTo(window_psn, g_event_bytes);
