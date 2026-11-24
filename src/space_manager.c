@@ -935,6 +935,10 @@ bool space_manager_focus_space_using_gesture(uint32_t new_did, uint64_t new_sid)
         return true;
     }
 
+    if (!__sync_bool_compare_and_swap(&__pending_synthesized_gesture, false, true)) {
+        return false;
+    }
+
     CGPoint point = display_center(new_did);
     uint32_t cur_did = display_manager_cursor_display_id();
 
