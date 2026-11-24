@@ -190,6 +190,7 @@ void window_manager_apply_manage_rules_to_window(struct space_manager *sm, struc
     }
 
     if (match) window_manager_apply_manage_rule_effects_to_window(sm, wm, window, &effects);
+    if (effects.scratchpad) free(effects.scratchpad);
 }
 
 void window_manager_apply_rules_to_window(struct space_manager *sm, struct window_manager *wm, struct window *window, char *window_title, char *window_role, char *window_subrole, bool one_shot_rules)
@@ -214,6 +215,7 @@ void window_manager_apply_rules_to_window(struct space_manager *sm, struct windo
     }
 
     if (match) window_manager_apply_rule_effects_to_window(sm, wm, window, &effects);
+    if (effects.scratchpad) free(effects.scratchpad);
 }
 
 void window_manager_set_focus_follows_mouse(struct window_manager *wm, enum ffm_mode mode)
