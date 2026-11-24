@@ -411,7 +411,10 @@ static AXUIElementRef display_manager_find_element_at_point(CGPoint point)
 
     CFTypeRef role = NULL;
     AXUIElementCopyAttributeValue(element_ref, kAXRoleAttribute, &role);
-    if (!role) return NULL;
+    if (!role) {
+        CFRelease(element_ref);
+        return NULL;
+    }
 
     if (CFEqual(role, kAXWindowRole)) {
         CFRelease(role);

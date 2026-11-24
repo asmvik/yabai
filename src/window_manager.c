@@ -1679,6 +1679,8 @@ bool window_manager_add_existing_application_windows(struct space_manager *sm, s
                     int app_window_list_len = ts_buf_len(app_window_list);
                     if (app_window_list_len == 0) break;
 
+                    bool matched = false;
+
                     memcpy(data+0xc, &element_id, sizeof(uint64_t));
                     AXUIElementRef element_ref = _AXUIElementCreateWithRemoteToken(data_ref);
 
@@ -1688,7 +1690,6 @@ bool window_manager_add_existing_application_windows(struct space_manager *sm, s
                     if (role) {
                         if (CFEqual(role, kAXWindowRole)) {
                             uint32_t element_wid = ax_window_id(element_ref);
-                            bool matched = false;
 
                             if (element_wid != 0) {
                                 for (int i = 0; i < app_window_list_len; ++i) {
@@ -1702,13 +1703,13 @@ bool window_manager_add_existing_application_windows(struct space_manager *sm, s
 
                             if (matched) {
                                 window_manager_create_and_add_window(sm, wm, application, element_ref, element_wid, false);
-                            } else {
-                                CFRelease(element_ref);
                             }
                         }
 
                         CFRelease(role);
                     }
+
+                    if (!matched) CFRelease(element_ref);
                 }
 
                 CFRelease(data_ref);
